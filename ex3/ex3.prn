@@ -1,0 +1,102 @@
+Script started on Wednesday 04 February 2026 03:27:58 PM IST
+[23bcs120@mepcolinux ex3]$cat p3.c
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<mpi.h>
+
+#define array_size 103
+#define rand_limit 5
+
+int main(int argc, char **argv)
+{
+    int rank, size;
+    int *full_array = NULL;
+    int *local_array = NULL;
+    int target_number;
+    int local_count = 0, global_count = 0;
+    int element_per_proc;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    element_per_proc = array_size / size;
+
+    if(rank == 0)
+    {
+        printf("Enter the number to find: ");
+	fflush(stdout);
+        scanf("%d", &target_number);
+
+        full_array = (int*)malloc(array_size * sizeof(int));
+
+        printf("Array: ");
+        for(int i = 0; i < array_size; i++)
+        {
+            full_array[i] = rand() % rand_limit;
+            printf("%d ", full_array[i]);
+        }
+        printf("\n");
+    }
+
+    MPI_Bcast(&target_number, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    local_array = (int*)malloc(element_per_proc * sizeof(int));
+
+    MPI_Scatter(full_array, element_per_proc, MPI_INT,
+                local_array, element_per_proc, MPI_INT,
+                0, MPI_COMM_WORLD);
+
+    for(int i = 0; i < element_per_proc; i++)
+    {
+        if(local_array[i] == target_number)
+        {
+            local_count++;
+        }
+    }
+
+    printf("Process %d received %d elements and found number %d times\n",
+           rank, element_per_proc, local_count);
+
+    MPI_Reduce(&local_count, &global_count, 1, MPI_INT,
+               MPI_SUM, 0, MPI_COMM_WORLD);
+
+    if(rank == 0)
+    {
+        printf("Total frequency of number %d is %d\n",
+               target_number, global_count);
+        free(full_array);
+    }
+
+    free(local_array);
+    MPI_Finalize();
+
+    return 0;
+}
+
+III-B2@gbl:~/Documents/120$ mpicc p3.c
+III-B2@gbl:~/Documents/120$ ./a.out
+Enter the number to find: 4
+Array: 3 1 2 0 3 0 1 2 4 1 2 2 0 4 3 1 0 1 2 1 1 3 2 4 2 0 2 3 2 0 4 2 2 3 4 2 3 1 1 2 4 3 1 4 4 2 3 4 0 0 3 1 1 0 1 3 2 0 1 1 0 0 4 2 1 0 1 4 3 2 4 0 2 0 4 2 4 4 3 0 2 3 1 3 3 4 3 1 4 4 2 0 1 3 4 2 1 1 4 4 0 0 4 
+Process 0 received 103 elements and found number 22 times
+Total frequency of number 4 is 22
+III-B2@gbl:~/Documents/120$ mpicc p3.c
+III-B2@gbl:~/Documents/120$ ./a.out
+Enter the number to find: 3
+Array: 3 1 2 0 3 0 1 2 4 1 2 2 0 4 3 1 0 1 2 1 1 3 2 4 2 0 2 3 2 0 4 2 2 3 4 2 3 1 1 2 4 3 1 4 4 2 3 4 0 0 3 1 1 0 1 3 2 0 1 1 0 0 4 2 1 0 1 4 3 2 4 0 2 0 4 2 4 4 3 0 2 3 1 3 3 4 3 1 4 4 2 0 1 3 4 2 1 1 4 4 0 0 4 
+Process 0 received 103 elements and found number 18 times
+Total frequency of number 3 is 18
+III-B2@gbl:~/Documents/120$ ./a.out
+Enter the number to find: 0
+Array: 3 1 2 0 3 0 1 2 4 1 2 2 0 4 3 1 0 1 2 1 1 3 2 4 2 0 2 3 2 0 4 2 2 3 4 2 3 1 1 2 4 3 1 4 4 2 3 4 0 0 3 1 1 0 1 3 2 0 1 1 0 0 4 2 1 0 1 4 3 2 4 0 2 0 4 2 4 4 3 0 2 3 1 3 3 4 3 1 4 4 2 0 1 3 4 2 1 1 4 4 0 0 4 
+Process 0 received 103 elements and found number 19 times
+Total frequency of number 0 is 19
+III-B2@gbl:~/Documents/120$ ./a.out
+Enter the number to find: 5
+Array: 3 1 2 0 3 0 1 2 4 1 2 2 0 4 3 1 0 1 2 1 1 3 2 4 2 0 2 3 2 0 4 2 2 3 4 2 3 1 1 2 4 3 1 4 4 2 3 4 0 0 3 1 1 0 1 3 2 0 1 1 0 0 4 2 1 0 1 4 3 2 4 0 2 0 4 2 4 4 3 0 2 3 1 3 3 4 3 1 4 4 2 0 1 3 4 2 1 1 4 4 0 0 4 
+Process 0 received 103 elements and found number 0 times
+Total frequency of number 5 is 0
+[23bcs120@mepcolinux ex3]$exit
+exit
+Script done on Wednesday 04 February 2026 03:28:04 PM IST

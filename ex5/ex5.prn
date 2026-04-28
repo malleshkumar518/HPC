@@ -1,0 +1,181 @@
+Script started on Wednesday 18 February 2026 03:55:55 PM IST
+[23bcs120@mepcolinux ex5]$cat p1.c 
+#include<stdio.h>
+#include<stdlib.h>
+#include<pthread.h>
+int thread_count;
+void *Hello (void* rank);
+int main(int argc,char* argv[]){
+	long thread;
+	pthread_t* thread_handles;
+	thread_count = strtol(argv[1],NULL,10);
+	thread_handles = (pthread_t*) malloc(thread_count*sizeof(pthread_t));
+	for(thread=0;thread<thread_count;thread++)
+		pthread_create(&thread_handles[thread],NULL,Hello,(void*)thread);
+	printf("Hello from the main thread \n");
+	for(thread=0;thread<thread_count;thread++)
+		pthread_join(thread_handles[thread],NULL);
+	free(thread_handles);
+	return 0;
+}
+void* Hello(void* rank){
+	long my_rank = (long) rank;
+	printf("Hello from thread %ld of %d \n",my_rank,thread_count);
+}
+
+[23bcs120@mepcolinux ex5]$g++ p1.c -pthread
+[23bcs120@mepcolinux ex5]$./a.out 5
+Hello from thread 0 of 5 
+Hello from thread 1 of 5 
+Hello from thread 2 of 5 
+Hello from the main thread 
+Hello from thread 4 of 5 
+Hello from thread 3 of 5 
+[23bcs120@mepcolinux ex5]$cat p2.c
+#include <stdio.h>
+#include <pthread.h>
+#define MAX 10
+int A[MAX][MAX], B[MAX][MAX], Sum[MAX][MAX], Mul[MAX][MAX]={0};
+int r, c;
+void* add_matrices(void* arg) {
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            Sum[i][j] = A[i][j] + B[i][j];
+        }
+    }
+    return NULL;
+}
+void* mul_matrices(void* arg) {
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+	   for (int k=0; k<r; k++){
+            Mul[i][j] += A[i][k] * B[k][j];       
+	   }
+	}
+    }
+    return NULL;
+}
+int main() {
+    pthread_t thread1, thread2;
+    printf("Enter the rows and columns: ");
+    scanf("%d %d", &r, &c);
+    printf("Enter the values for Matrix A:\n");
+    for(int i=0; i<r; i++){
+       for(int j=0; j<c; j++){
+	  scanf("%d", &A[i][j]);
+       }
+    }
+    printf("Enter the values for Matrix B:\n");
+    for(int i=0; i<r; i++){
+       for(int j=0; j<c; j++){
+	  scanf("%d", &B[i][j]);
+       }
+    }
+    pthread_create(&thread1, NULL, add_matrices, NULL);
+    pthread_create(&thread2, NULL, mul_matrices, NULL);
+    pthread_join(thread1, NULL);
+    if (r!=c){
+       printf("Multiplcation is not possible\n");
+       return 0;
+    }
+    pthread_join(thread2, NULL);
+    printf("\nAddition Result:\n");
+    for(int i=0; i<r; i++) {
+        for(int j=0; j<c; j++) printf("%d ", Sum[i][j]);
+        printf("\n");
+    }
+    printf("\nMultiplication Result:\n");
+    for(int i=0; i<r; i++) {
+        for(int j=0; j<c; j++) printf("%d ", Mul[i][j]);
+        printf("\n");
+    }
+    return 0;
+}
+[23bcs120@mepcolinux ex5]$g++ p2.c -pthread
+[23bcs120@mepcolinux ex5]$./a.out
+Enter the rows and columns: 3
+3
+Enter the values for Matrix A:
+1 2 3
+4 5 6
+7 8 9
+Enter the values for Matrix B:
+2 3 4
+1 5 6
+7 8 8
+
+Addition Result:
+3 5 7 
+5 10 12 
+14 16 17 
+
+Multiplication Result:
+25 37 40 
+55 85 94 
+85 133 148 
+[23bcs120@mepcolinux ex5]$cat p3.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+int arr[100];
+int n, num_threads;
+int partial_sum[10];
+
+void* sumArray(void* arg) {
+    int thread_id = *(int *)arg;
+    int start = thread_id * (n / num_threads);
+    int end = (thread_id == num_threads - 1) ? n : start + (n / num_threads);
+
+    partial_sum[thread_id] = 0;
+    
+    for (int i = start; i < end; i++) {
+        partial_sum[thread_id] += arr[i];
+    }
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[10];
+    int thread_id[10];
+    int total_sum = 0;
+
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+
+    printf("Enter Array Elements: ");
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    printf("Enter Number of threads: ");
+    scanf("%d", &num_threads);
+    for (int i = 0; i < num_threads; i++) {
+        thread_id[i] = i;
+        pthread_create(&threads[i], NULL, sumArray, &thread_id[i]);
+    }
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+        printf("Thread %d partial sum: %d\n", i, partial_sum[i]);
+        total_sum += partial_sum[i];
+    }
+
+    printf("Total Sum is %d\n", total_sum);
+    return 0;
+}
+
+[23bcs120@mepcolinux ex5]$g++ p3.c -pthread
+[23bcs120@mepcolinux ex5]$./a.out
+Enter number of elements: 10
+Enter Array Elements: 1 2 3 4 5 6 7 8 9 10
+Enter Number of threads: 5
+Thread 0 partial sum: 3
+Thread 1 partial sum: 7
+Thread 2 partial sum: 11
+Thread 3 partial sum: 15
+Thread 4 partial sum: 19
+Total Sum is 55
+[23bcs120@mepcolinux ex5]$exit
+exit
+
+Script done on Wednesday 18 February 2026 03:57:04 PM IST

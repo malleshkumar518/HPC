@@ -1,0 +1,150 @@
+Script started on Wednesday 01 April 2026 04:23:50 PM IST
+[23bcs120@mepcolinux ex9]$cat trap.c 
+#include <stdio.h>
+#include <omp.h>
+double f(double x)
+{
+    return x * x;
+}
+int main()
+{
+	double a, b, h, sum = 0.0, result;
+	int n;
+	printf("Enter a: ");
+	scanf("%lf", &a);
+	printf("Enter b: ");
+	scanf("%lf", &b);
+	printf("Enter number of trapezoids: ");
+	scanf("%d", &n);
+	h = (b - a) / n;
+	sum = 0.0;
+	#pragma omp parallel for reduction(+:sum)
+	for (int i =1;i<n;i++) {
+		sum+=f(a+i*h);
+	}
+	result=h*((f(a)+f(b))/2+sum);
+	printf("\nTrapezoid using reduction: %.2lf\n",result);
+	int sum_c=0.0;
+#pragma omp parallel for
+	for(int i=0;i<n;i++)
+	{
+		double t=f(a+i*h);
+#pragma omp critical
+		{
+			sum_c+=t;
+		}
+	}
+	double res=h*((f(a)+f(b))/2+sum_c);
+	printf("\nTrapezoid using critical: %.2lf\n",res); 
+	return 0;
+}
+
+[23bcs120@mepcolinux ex9]$g++ trap.c 
+[23bcs120@mepcolinux ex9]$./a.out
+Enter a: 0.0
+Enter b: 100.0
+Enter number of trapezoids: 50
+
+Trapezoid using reduction: 333400.00
+
+Trapezoid using critical: 333400.00
+[23bcs120@mepcolinux ex9]$cat sum.c 
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+int main() {
+    int r, c, k, sum = 0;
+    printf("Enter rows and columns: ");
+    scanf("%d %d", &r, &c);
+    int **matrix = (int **)malloc(r * sizeof(int *));
+    for (int i = 0; i < r; i++)
+        matrix[i] = (int *)malloc(c * sizeof(int));
+    printf("Enter matrix elements:\n");
+    for (int i = 0; i < r; i++)
+        for (int j = 0; j < c; j++)
+            scanf("%d", &matrix[i][j]);
+    printf("Enter value of k: ");
+    scanf("%d", &k);
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            if (matrix[i][j] % k == 0) {
+                sum += matrix[i][j];
+            }
+        }
+    }
+    printf("Sum of elements divisible by %d: %d\n", k, sum);
+    for (int i = 0; i < r; i++) free(matrix[i]);
+    free(matrix);
+    return 0;
+}
+
+[23bcs120@mepcolinux ex9]$g++ sum.c 
+[23bcs120@mepcolinux ex9]$./a.out
+Enter rows and columns: 3 3 
+Enter matrix elements:
+1 2 3 
+4 5 6 
+7 8 9 
+Enter value of k: 3
+Sum of elements divisible by 3: 18
+[23bcs120@mepcolinux ex9]$cat saddle.c 
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+int main() {
+    int r, c, count = 0;
+    printf("Enter rows and columns: ");
+    scanf("%d %d", &r, &c);
+    int **matrix = (int **)malloc(r * sizeof(int *));
+    for (int i = 0; i < r; i++)
+        matrix[i] = (int *)malloc(c * sizeof(int));
+    printf("Enter matrix elements:\n");
+    for (int i = 0; i < r; i++)
+        for (int j = 0; j < c; j++)
+            scanf("%d", &matrix[i][j]);
+    #pragma omp parallel for reduction(+:count)
+    for (int i = 0; i < r; i++) {
+        for (int j = 0; j < c; j++) {
+            int val = matrix[i][j];
+            int min = 1;
+            int max = 1;
+            for (int k = 0; k < c; k++) {
+                if (matrix[i][k] < val) {
+                    min = 0;
+                    break;
+                }
+            }
+            if (min) {
+                for (int k = 0; k < r; k++) {
+                    if (matrix[k][j] > val) {
+                        max = 0;
+                        break;
+                    }
+                }
+            } else {
+                max = 0;
+            }
+            if (min && max) {
+                count++;
+            }
+        }
+    }
+    printf("Number of saddle points: %d\n", count);
+    for (int i = 0; i < r; i++) free(matrix[i]);
+    free(matrix);
+    return 0;
+}
+
+[23bcs120@mepcolinux ex9]$g++ saddle.c 
+[23bcs120@mepcolinux ex9]$./a.out
+Enter rows and columns: 3 3 
+Enter matrix elements:
+10 2 11
+14 7 9
+0 1 8
+Number of saddle points: 1
+[23bcs120@mepcolinux ex9]$exit
+exit
+
+Script done on Wednesday 01 April 2026 04:24:46 PM IST

@@ -1,0 +1,10 @@
+Thread [+]: 5 + 47 = 52
+Thread [+]: 40 + 31 = 71
+Thread [-]: 0 - 3 = -3
+Thread [*]: 26 * 7 = 182
+Thread [+]: 19 + 47 = 66
+Thread [/]: 29 / 13 = 2
+Thread [/]: 6 / 6 = 1
+Thread [-]: 36 - 37 = -1
+Thread [*]: 40 * 39 = 1560
+Thread [+]: 15 + 47 = 62

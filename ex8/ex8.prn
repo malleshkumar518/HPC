@@ -1,0 +1,212 @@
+Script started on Wednesday 25 March 2026 04:18:00 PM IST
+[23bcs120@mepcolinux ex8]$cat sum.c 
+#include<stdio.h>
+#include<stdlib.h>
+#include<omp.h>
+int main()
+{
+   printf("Sum of the two array\n");
+   printf("\n");
+   int i,j,r,c,n;
+   printf("Enter the size of an array:");
+   scanf("%d",&n);
+   int a[n];
+   int b[n];
+   printf("Enter the array 1 elements:\n");
+   for(i=0;i<n;i++)
+   {
+      scanf("%d",&a[i]);
+   }
+   printf("Enter the array 2 elements:\n");
+   for (i=0;i<n;i++)
+   {
+      scanf("%d",&b[i]);
+   }
+   int res[n];
+   #pragma omp parallel
+      for(i=0;i<n;i++)
+      {
+	 res[i]=a[i]+b[i];
+      }
+   printf("Result Array:\n");
+   for (i=0;i<n;i++)
+   {
+      printf("%d\t",res[i]);
+      
+   }
+   printf("\n\n");
+   return 0;
+}
+
+[23bcs120@mepcolinux ex8]$g++ sum.c 
+[23bcs120@mepcolinux ex8]$./a.out
+Sum of the two array
+
+Enter the size of an array:4
+Enter the array 1 elements:
+1
+2
+3
+4
+Enter the array 2 elements:
+5
+6
+7
+8
+Result Array:
+6	8	10	12	
+
+[23bcs120@mepcolinux ex8]$cat const.c 
+#include<stdio.h>
+#include<stdlib.h>
+#include<omp.h>
+int main()
+{
+   printf("Add the constant to the array\n");
+   printf("\n");
+   int i,j,r,c,n;
+   printf("Enter the size of an array:");
+   scanf("%d",&n);
+   int a[n];
+   printf("Enter the array 1 elements:\n");
+   for(i=0;i<n;i++)
+   {
+      scanf("%d",&a[i]);
+   }
+   int res[n];
+   #pragma omp parallel
+      for(i=0;i<n;i++)
+      {
+	 res[i]=a[i]+100;
+      }
+   printf("Result Array after add with constant(10):\n");
+   for (i=0;i<n;i++)
+   {
+      printf("%d\t",res[i]);
+      
+   }
+   printf("\n\n");
+   return 0;
+}
+
+[23bcs120@mepcolinux ex8]$g++ const.c 
+[23bcs120@mepcolinux ex8]$./a.out
+Add the constant to the array
+
+Enter the size of an array:4
+Enter the array 1 elements:
+1
+2
+3
+4
+Result Array after add with constant(10):
+101	102	103	104	
+
+[23bcs120@mepcolinux ex8]$cat matrix.c 
+#include<stdio.h>
+#include<stdlib.h>
+#include<omp.h>
+int main()
+{
+   printf("----------------------------------------------------------------\nMirror Matix\n");
+   printf("----------------------------------------------------------------\n");
+   int a[3][3],res[3][3],i,j,r,c;
+   printf("Enter the size:");
+   scanf("%d",&r);
+   for(i=0;i<r;i++)
+   {
+      for(j=0;j<r;j++){
+	 scanf("%d",&a[i][j]);
+      }
+   }
+   c=r-1;
+   #pragma omp parallel
+      for(i=0;i<r;i++)
+      {
+	 for(j=0;j<r;j++)
+	 {
+	    res[i][j]=a[i][c];
+	    c=c-1;
+	 }
+	 c=r-1;
+      }
+   printf("Result:\n");
+   for (i=0;i<r;i++)
+   {
+      for(j=0;j<r;j++)
+      {
+	 printf("%d\t",res[i][j]);
+      }
+      printf("\n");
+   }
+   return 0;
+}
+[23bcs120@mepcolinux ex8]$g++ matrix.c 
+[23bcs120@mepcolinux ex8]$./a.out
+----------------------------------------------------------------
+Mirror Matix
+----------------------------------------------------------------
+Enter the size:3
+1 2 3
+4 5 6
+7 8 9
+Result:
+3	2	1	
+6	5	4	
+9	8	7	
+[23bcs120@mepcolinux ex8]$cat mini.c 
+#include<stdio.h>
+#include<stdlib.h>
+#include<omp.h>
+int main()
+{
+   printf("----------------------------------------------------------------\nRunning minimum in the array\n");
+   printf("----------------------------------------------------------------\n");
+   int i,j,r,c,n;
+   printf("Enter the size of an array:");
+   scanf("%d",&n);
+   int a[n];
+   int min;
+   for(i=0;i<n;i++)
+   {
+      scanf("%d",&a[i]);
+   }
+   min=a[0];
+   int res[n];
+   res[0]=a[0];
+   #pragma omp parallel
+      for(i=0;i<n;i++)
+      {
+	 if(a[i]<min)
+	 {
+	    min=a[i];
+	 }
+	 res[i]=min;
+      }
+   printf("Result Array:\n");
+   for (i=0;i<n;i++)
+   {
+      printf("%d\t",res[i]);
+      
+   }
+   printf("\n-----------------------------------------------------------------\n");
+   return 0;
+}
+
+[23bcs120@mepcolinux ex8]$g++ mini.c 
+[23bcs120@mepcolinux ex8]$./a.out
+----------------------------------------------------------------
+Running minimum in the array
+----------------------------------------------------------------
+Enter the size of an array:4
+1
+2
+3
+4
+Result Array:
+1	1	1	1	
+-----------------------------------------------------------------
+[23bcs120@mepcolinux ex8]$exit
+exit
+
+Script done on Wednesday 25 March 2026 04:19:03 PM IST
